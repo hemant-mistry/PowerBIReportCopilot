@@ -1,0 +1,146 @@
+/* App.css */
+
+/* Add a Google Font for a cleaner look */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Roboto', sans-serif; /* Apply the new font */
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4;
+  height: 100%;
+  overflow: hidden; /* Hide the main scrollbar */
+}
+
+h1, h4 {
+  font-weight: 700;
+}
+
+/* Styling for the chat container */
+.chat-container {
+  width: 60rem;
+  height: 50rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden; /* Hide the main scrollbar */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Styling for chat messages */
+.chat-messages {
+  flex-grow: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-right: 16px;
+}
+
+/* Styling for user and bot messages */
+.user-message,
+.bot-message {
+  margin-bottom: 12px;
+  padding: 12px; /* Increase padding for a cleaner look */
+  border-radius: 8px;
+  word-wrap: break-word;
+  max-width: 80%;
+}
+
+.user-message {
+  background-color: #d2ecf2;
+  text-align: right;
+  align-self: flex-end;
+}
+
+.bot-message {
+  background-color: #e0e0e0;
+  text-align: left;
+  align-self: flex-start;
+}
+
+/* Styling for table responses */
+.bot-response-table table {
+  width: 100%;
+  border-collapse: collapse;
+  
+}
+
+.bot-response-table th, .bot-response-table td {
+  border: 1px solid #ddd;
+  padding: 12px; /* Increase padding for a cleaner look */
+  white-space: nowrap; /* Prevent text from wrapping to the next line */
+  max-width: 300px; /* Set a max width for each cell */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Show ellipsis for overflow */
+}
+
+.bot-response-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.bot-response-table th {
+  padding-top: 16px; /* Increase padding for a cleaner look */
+  padding-bottom: 16px; /* Increase padding for a cleaner look */
+  text-align: left;
+  background-color: #0c457d;
+  color: white;
+}
+/* Styling for chat input */
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 12px; /* Increase padding for a cleaner look */
+  border-top: 1px solid #ddd;
+}
+
+input {
+  flex-grow: 1;
+  padding: 12px; /* Increase padding for a cleaner look */
+  margin-right: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 12px 20px; /* Increase padding for a cleaner look */
+  background-color: #0c457d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+
+.dax-query{
+  font-size: 14px; /* Adjust the font size */
+  font-weight: 300; /* Use a lighter font weight */
+  color: #333; /* A bit darker color for better visibility */
+  margin-top: 8px; /* Add some spacing from the table */
+  border-top: 1px solid #ddd; /* Add a border above the DAX query */
+  padding-top: 8px; /* Add padding for better separation */
+}
+
+
+.dax-query-title{
+  font-weight: 600;
+}
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .chat-container {
+    width: 90vw;
+    height: 90vw;
+  }
+}
