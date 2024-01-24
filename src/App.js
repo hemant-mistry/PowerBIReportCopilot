@@ -23,7 +23,7 @@ function App() {
     ]);
   
     // Send user input to Flask API
-    const response = await fetch('https://powerbicopilotbackend.azurewebsites.net/api', {
+    const response = await fetch('https://dualitydev.pythonanywhere.com/api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
