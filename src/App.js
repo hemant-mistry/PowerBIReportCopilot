@@ -1,11 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { PublicClientApplication } from '@azure/msal-browser';
 import './App.css';
+
+const TenantId = '37700e73-f4ab-40b3-823e-9a13d078da53';
+const ClientId = '986386c6-682e-45fe-92d1-18b9eba7d6e1';
+
+const msalConfig = {
+  auth: {
+    clientId: ClientId,
+    authority: `https://login.microsoftonline.com/${TenantId}`,
+    redirectUri: window.location.origin,
+  },
+  cache: {
+    cacheLocation: 'localStorage',
+    storeAuthStateInCookie: true,
+  },
+};
+
+const pca = new PublicClientApplication(msalConfig);
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [userInput, setUserInput] = useState('');
   const [botResponse, setBotResponse] = useState(null);
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
+  console.log(accessToken)
+  useEffect(() => {
+    const initializeMSAL = async () => {
+      try {
+        // Check if MSAL has been initialized
+        if (!pca.isInitialized()) {
+          await pca.initialize();
+        }
+  
+        const accounts = pca.getAllAccounts();
+        if (accounts.length > 0) {
+          // User is already logged in
+          setIsLoggedIn(true);
+  
+          // Try to acquire an access token silently
+          pca.acquireTokenSilent({
+            account: accounts[0],
+            scopes: [
+              'https://analysis.windows.net/powerbi/api/Dataset.Read.All',
+              'https://analysis.windows.net/powerbi/api/Report.Read.All',
+            ],
+          })
+            .then((response) => {
+              setAccessToken(response.accessToken);
+            })
+            .catch((error) => {
+              console.error('Error acquiring access token silently:', error);
+              // Handle the error appropriately
+            });
+        }
+      } catch (error) {
+        console.error('Error initializing MSAL:', error);
+        // Handle the error appropriately
+      }
+    };
+  
+    initializeMSAL();
+  }, []);
+  const handleLogin = async () => {
+    try {
+      // Ensure that the application is initialized before calling loginPopup
+      await pca.initialize();
+      const loginResponse = await pca.loginPopup();
+      if (loginResponse) {
+        setIsLoggedIn(true);
+        // After login, get the access token
+        const accounts = pca.getAllAccounts();
+        const accessTokenResponse = await pca.acquireTokenSilent({
+          account: accounts[0],
+          scopes: [
+            'https://analysis.windows.net/powerbi/api/Dataset.Read.All',
+            'https://analysis.windows.net/powerbi/api/Report.Read.All',
+          ],
+        });
+        setAccessToken(accessTokenResponse.accessToken);
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+    }
+  };
+  
+  
   const handleInputChange = (event) => {
     setUserInput(event.target.value);
   };
@@ -23,14 +104,16 @@ function App() {
     ]);
   
     // Send user input to Flask API
-    const response = await fetch('https://dualitydev.pythonanywhere.com/api', {
+    const response = await fetch('http://127.0.0.1:5000/api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userInput: userInput })  // Include user input in the request body
+      body: JSON.stringify({
+        userInput: userInput,
+        accessToken: accessToken,
+      }),
     });
-    // Check if the request was successful (status code 200)
     // Check if the request was successful (status code 200)
 if (response.ok) {
   // Parse the JSON response
@@ -89,41 +172,42 @@ if (response.ok) {
 
   return (
     <>
-      <center><div><h1>Power BI Report Copilot</h1></div></center>
-      <center>
-      <div>
-        <h4>
-          <a href='https://app.powerbi.com/groups/aa3db8b3-856e-45ec-8399-eb558d24e69b/reports/7308046c-7e4f-48c1-8241-2512784403d5/ReportSection97d3c8eeb92a49265900?experience=power-bi'>
-            Report Link
-          </a>
-          <span style={{ marginLeft: '10px' }}>Version 1</span>
-        </h4>
-      </div>
-    </center>
-
-      <div className="chat-container">
-        <div className="chat-messages">
-          {/* Render user and bot messages */}
-          {messages.map((message, index) => (
-            <div key={index} className={message.type === 'user' ? 'user-message' : 'bot-message'}>
-              {/* Render bot's table response if available */}
-              {message.type === 'bot' && message.text}
-              {/* Render user message as plain text */}
-              {message.type === 'user' && <div>{message.text}</div>}
-            </div>
-          ))}
+      {isLoggedIn ? (
+        <div className="chat-container">
+          <div className="chat-messages">
+            {/* Render user and bot messages */}
+            {messages.map((message, index) => (
+              <div key={index} className={message.type === 'user' ? 'user-message' : 'bot-message'}>
+                {/* Render bot's table response if available */}
+                {message.type === 'bot' && message.text}
+                {/* Render user message as plain text */}
+                {message.type === 'user' && <div>{message.text}</div>}
+              </div>
+            ))}
+          </div>
+          <div className="chat-input">
+            <input
+              type="text"
+              placeholder="Type your message..."
+              value={userInput}
+              onChange={handleInputChange}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  handleSendMessage();
+                }
+              }}
+                
+            />
+            <button onClick={handleSendMessage}>Send</button>
+            <button onClick={handleClearChat}>Clear</button>
+          </div>
         </div>
-        <div className="chat-input">
-          <input
-            type="text"
-            placeholder="Type your message..."
-            value={userInput}
-            onChange={handleInputChange}
-          />
-          <button onClick={handleSendMessage}>Send</button>
-          <button onClick={handleClearChat}>Clear</button>
+      ) : (
+        <div>
+          <h2>Please log in</h2>
+          <button onClick={handleLogin}>Log in</button>
         </div>
-      </div>
+      )}
     </>
   );
 }
